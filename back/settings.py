@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'app.usuarios',
+    'app.imoveis',
     'rest_framework',
     'rest_framework_simplejwt'
 ]
