@@ -135,3 +135,74 @@ class ImovelTests(APITestCase):
         """
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_imovel_success(self):
+        """
+        Caso de Uso: Editar Imóvel - Sucesso pelo proprietário.
+        """
+        imovel = Imovel.objects.create(
+            locador=self.locador,
+            tipo="casa",
+            categoria="residencial",
+            endereco="Rua Original",
+            descricao="Desc Original",
+            valor="1000.00"
+        )
+        url = reverse('imovel-detail', kwargs={'pk': imovel.pk})
+        self.client.force_authenticate(user=self.locador)
+        
+        data = {"endereco": "Rua Alterada", "valor": "1200.00"}
+        response = self.client.patch(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        imovel.refresh_from_db()
+        self.assertEqual(imovel.endereco, "Rua Alterada")
+        self.assertEqual(float(imovel.valor), 1200.00)
+
+    def test_update_imovel_forbidden_for_non_owner(self):
+        """
+        Caso de Uso: Editar Imóvel - Tentativa por não proprietário (deve dar 404).
+        """
+        imovel = Imovel.objects.create(
+            locador=self.locador,
+            tipo="casa",
+            categoria="residencial",
+            endereco="Rua do Dono",
+            descricao="Desc",
+            valor="1000.00"
+        )
+        url = reverse('imovel-detail', kwargs={'pk': imovel.pk})
+        
+        # Tenta editar como outro usuário (locatario ou outro locador)
+        self.client.force_authenticate(user=self.locatario)
+        
+        data = {"endereco": "Tentativa Hacker"}
+        response = self.client.patch(url, data, format='json')
+        
+        # Conforme o plano, esperamos 404 devido ao get_queryset filtrado
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_imovel_add_media(self):
+        """
+        Caso de Uso: Editar Imóvel - Adicionar nova mídia durante edição.
+        """
+        imovel = Imovel.objects.create(
+            locador=self.locador,
+            tipo="casa",
+            categoria="residencial",
+            endereco="Rua Mídia",
+            descricao="Desc",
+            valor="1000.00"
+        )
+        url = reverse('imovel-detail', kwargs={'pk': imovel.pk})
+        self.client.force_authenticate(user=self.locador)
+        
+        image = SimpleUploadedFile("new_image.jpg", b"new_content", content_type="image/jpeg")
+        data = {
+            "midias_upload": [image]
+        }
+        
+        response = self.client.patch(url, data, format='multipart')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(imovel.midias.count(), 1)

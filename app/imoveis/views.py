@@ -6,8 +6,17 @@ from .serializers import ImovelSerializer
 from .permissions import IsLocador, IsOwnerOrReadOnly
 
 class ImovelViewSet(viewsets.ModelViewSet):
-    queryset = Imovel.objects.all()
     serializer_class = ImovelSerializer
+    
+    def get_queryset(self):
+        """
+        Retorna o queryset base.
+        Para ações de edição (update, partial_update, destroy), 
+        filtramos apenas pelos imóveis do próprio usuário para garantir 404 se não for o dono.
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return Imovel.objects.filter(locador=self.request.user)
+        return Imovel.objects.all()
     
     def get_permissions(self):
         """

@@ -27,3 +27,17 @@ class ImovelSerializer(serializers.ModelSerializer):
             ImovelMidia.objects.create(imovel=imovel, arquivo=midia)
             
         return imovel
+
+    def update(self, instance, validated_data):
+        midias_data = validated_data.pop('midias_upload', [])
+        
+        # Atualiza os campos do imóvel
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Adiciona novas mídias se houver
+        for midia in midias_data:
+            ImovelMidia.objects.create(imovel=instance, arquivo=midia)
+            
+        return instance
