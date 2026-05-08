@@ -1,3 +1,4 @@
+mysqlclient==2.2.7
 Django==5.1.5
 django-cors-headers==4.6.0
 djangorestframework==3.15.2

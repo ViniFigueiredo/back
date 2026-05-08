@@ -3,14 +3,20 @@ FROM ubuntu:24.04
 
 # Evitar prompts interativos
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 # Definir o diretório de trabalho
 WORKDIR /app
 
-# Instalar Python, pip e venv
+# Instalar Python, pip, venv e dependências para mysqlclient
 RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-venv \
+    python3-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar um ambiente virtual
@@ -30,4 +36,4 @@ COPY . .
 EXPOSE 8000
 
 # Comando para rodar as migrações e iniciar o servidor
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]

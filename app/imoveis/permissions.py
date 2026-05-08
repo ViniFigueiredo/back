@@ -7,6 +7,13 @@ class IsLocador(permissions.BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and getattr(request.user, 'tipo_de_usuario', None) == 'locador')
 
+class IsLocatario(permissions.BasePermission):
+    """
+    Permite acesso apenas se o usuário for do tipo 'locatario'.
+    """
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'tipo_de_usuario', None) == 'locatario')
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Permissão customizada para permitir que apenas os donos (locadores) do imóvel possam editá-lo.

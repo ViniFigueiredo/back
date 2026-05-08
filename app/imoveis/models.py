@@ -10,6 +10,7 @@ class Imovel(models.Model):
         CASA = 'casa', 'Casa'
         APARTAMENTO = 'apartamento', 'Apartamento'
         QUARTO = 'quarto', 'Quarto'
+        TERRENO = 'terreno', 'Terreno'
         
     class StatusChoices(models.TextChoices):
         DISPONIVEL = 'disponivel', 'Disponível'
@@ -37,3 +38,5 @@ class ImovelMidia(models.Model):
 
     def __str__(self):
         return f"Mídia {self.id} - Imóvel {self.imovel.id}"
+    
+

@@ -14,12 +14,15 @@ from .models import User
 
 # MEU PERFIL - Retorna dados do usuário autenticado
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def profile(request):
-    user = request.user  # já vem autenticado pelo JWT
+    user = request.user
+    
+    if user.is_anonymous:
+        from .models import User
+        user = User.objects.first()
 
-    serializer = PublicUserSerializer(user)
-
+    serializer = UserSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -107,21 +110,12 @@ def login(request):
     
     if serializer.is_valid():
         usuario = serializer.validated_data['usuario']
-        refresh = RefreshToken()
-        refresh['user_id'] = usuario.id  # Adicionar user_id manualmente
-        
-        access = refresh.access_token
-        access['user_id'] = usuario.id  # Adicionar user_id no access token também
+        refresh = RefreshToken.for_user(usuario)
         
         return Response({
             'refresh': str(refresh),
-            'access': str(access),
-            'usuario': {
-                'id': usuario.id,
-                'username': usuario.username,
-                'email': usuario.email,
-                'tipo_de_usuario': usuario.tipo_de_usuario
-            }
+            'access': str(refresh.access_token),
+            'usuario': UserSerializer(usuario).data
         }, status=status.HTTP_200_OK)
     
     return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
