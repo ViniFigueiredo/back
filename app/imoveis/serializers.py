@@ -13,14 +13,20 @@ class ImovelSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    midias_remover = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Imovel
-        fields = ['id', 'locador', 'tipo', 'categoria', 'endereco', 'descricao', 'valor', 'status', 'midias', 'midias_upload', 'created_at', 'updated_at']
-        read_only_fields = ['locador', 'status']
+        fields = ['id', 'locador', 'tipo', 'categoria', 'endereco', 'descricao', 'valor', 'status', 'midias', 'midias_upload', 'midias_remover', 'created_at', 'updated_at']
+        read_only_fields = ['locador']
 
     def create(self, validated_data):
         midias_data = validated_data.pop('midias_upload', [])
+        validated_data.pop('midias_remover', None) # Ignora se vier no create
         imovel = Imovel.objects.create(**validated_data)
         
         for midia in midias_data:
@@ -30,7 +36,12 @@ class ImovelSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         midias_data = validated_data.pop('midias_upload', [])
+        midias_remover = validated_data.pop('midias_remover', [])
         
+        # Remove mídias selecionadas
+        if midias_remover:
+            ImovelMidia.objects.filter(id__in=midias_remover, imovel=instance).delete()
+            
         # Atualiza os campos do imóvel
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
